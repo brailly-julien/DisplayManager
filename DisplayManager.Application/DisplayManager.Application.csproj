@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DisplayManager.Domain\DisplayManager.Domain.csproj" />
+    <ProjectReference Include="..\DisplayManager.Infrastructure\DisplayManager.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
