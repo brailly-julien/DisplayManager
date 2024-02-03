@@ -4,9 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DisplayManager.Domain.Interfaces
+namespace DisplayManager.Domain.Interfaces;
+
+internal interface IConfigurationService
 {
-    internal interface IConfigurationService
-    {
-    }
 }

@@ -4,9 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DisplayManager.TrayApp
+namespace DisplayManager.TrayApp;
+
+internal class TrayApplicationContext
 {
-    internal class TrayApplicationContext
-    {
-    }
 }

@@ -4,9 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DisplayManager.Tests.UnitTests
-{
+namespace DisplayManager.Tests.UnitTests;
     internal class ConfigurationServiceTests
     {
     }
-}

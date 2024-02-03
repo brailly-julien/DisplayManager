@@ -4,9 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DisplayManager.Infrastructure.WindowsDisplayAPI
+namespace DisplayManager.Infrastructure.WindowsDisplayAPI;
+
+internal class WindowsDisplayApiWrapper
 {
-    internal class WindowsDisplayApiWrapper
-    {
-    }
 }
