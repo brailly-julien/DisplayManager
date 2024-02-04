@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DisplayManager.Application\DisplayManager.Applications.csproj" />
+    <ProjectReference Include="..\DisplayManager.Applications\DisplayManager.Applications.csproj" />
   </ItemGroup>
 
 </Project>
