@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DisplayManager.Application.Services;
+namespace DisplayManager.Applications.Services;
 
 internal class ConfigurationService
 {

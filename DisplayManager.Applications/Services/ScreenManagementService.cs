@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DisplayManager.Application.Dtos;
+namespace DisplayManager.Applications.Services;
 
-internal class ScreenDto
+internal class ScreenManagementService
 {
 }

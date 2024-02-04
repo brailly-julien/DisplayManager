@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DisplayManager.Application\DisplayManager.Application.csproj" />
+    <ProjectReference Include="..\DisplayManager.Application\DisplayManager.Applications.csproj" />
     <ProjectReference Include="..\DisplayManager.Domain\DisplayManager.Domain.csproj" />
     <ProjectReference Include="..\DisplayManager.Infrastructure\DisplayManager.Infrastructure.csproj" />
   </ItemGroup>
