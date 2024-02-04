@@ -6,6 +6,15 @@ using System.Threading.Tasks;
 
 namespace DisplayManager.Infrastructure.WindowsDisplayAPI;
 
-internal class WindowsDisplayApiWrapper
+public class WindowsDisplayApiWrapper
 {
+    public void DetectDisplays()
+    {
+        // Utilisez les API Windows pour détecter les affichages
+    }
+
+    public void SetDisplayState(int displayId, bool enable)
+    {
+        // Active ou désactive l'affichage spécifié
+    }
 }

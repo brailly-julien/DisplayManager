@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace DisplayManager.Domain.Interfaces;
 
-internal interface IScreenManagementService
+public interface IScreenManagementService
 {
+    void DetectConnectedScreens();
+    void ActivateScreen(int screenId);
+    void DeactivateScreen(int screenId);
 }
