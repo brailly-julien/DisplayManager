@@ -31,7 +31,6 @@ public class WindowsDisplayApiWrapper
     {
         // Ici, vous pouvez traiter chaque moniteur détecté
         // Pour cet exemple, nous allons simplement imprimer les coordonnées du moniteur
-        Debug.WriteLine("Test");
         Debug.WriteLine($"Monitor bounds are {lprcMonitor.Left}, {lprcMonitor.Top}, {lprcMonitor.Right}, {lprcMonitor.Bottom}");
 
         return true; // Pour continuer l'énumération
