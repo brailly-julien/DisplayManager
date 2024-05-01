@@ -11,28 +11,21 @@ namespace DisplayManager.Infrastructure.WindowsDisplayAPI;
 
 public class WindowsDisplayApiWrapper
 {
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, MonitorEnumProc lpfnEnum, IntPtr dwData);
-
-    [DllImport("user32.dll", CharSet = CharSet.Auto)]
-    public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFOEX lpmi);
-    // Définissez la structure MONITORINFOEX
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-    public struct MONITORINFOEX
+    public WindowsDisplayApiWrapper()
     {
-        public int cbSize;
-        public RECT rcMonitor;
-        public RECT rcWork;
-        public uint dwFlags;
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-        public string szDevice;
     }
 
-    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    [DllImport("user32.dll")]
     static extern bool EnumDisplayDevices(string lpDevice, uint iDevNum, ref DISPLAY_DEVICE lpDisplayDevice, uint dwFlags);
 
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+    [DllImport("user32.dll", CharSet = CharSet.Ansi)]
+    static extern bool EnumDisplaySettings(string deviceName, int modeNum, ref DEVMODE devMode);
+
+    private const int ENUM_CURRENT_SETTINGS = -1;
+    private const int DISPLAY_DEVICE_ACTIVE = 0x1;
+    private const int DISPLAY_DEVICE_PRIMARY_DEVICE = 0x4;
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
     public struct DISPLAY_DEVICE
     {
         public int cb;
@@ -47,11 +40,41 @@ public class WindowsDisplayApiWrapper
         public string DeviceKey;
     }
 
-    // Un delegate pour MonitorEnumProc utilisé par EnumDisplayMonitors
-    public delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData);
-
-    public WindowsDisplayApiWrapper()
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    public struct DEVMODE
     {
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+        public string dmDeviceName;
+        public short dmSpecVersion;
+        public short dmDriverVersion;
+        public short dmSize;
+        public short dmDriverExtra;
+        public int dmFields;
+        public int dmPositionX;
+        public int dmPositionY;
+        public int dmDisplayOrientation;
+        public int dmDisplayFixedOutput;
+        public short dmColor;
+        public short dmDuplex;
+        public short dmYResolution;
+        public short dmTTOption;
+        public short dmCollate;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+        public string dmFormName;
+        public short dmLogPixels;
+        public int dmBitsPerPel;
+        public int dmPelsWidth;
+        public int dmPelsHeight;
+        public int dmDisplayFlags;
+        public int dmDisplayFrequency;
+        public int dmICMMethod;
+        public int dmICMIntent;
+        public int dmMediaType;
+        public int dmDitherType;
+        public int dmReserved1;
+        public int dmReserved2;
+        public int dmPanningWidth;
+        public int dmPanningHeight;
     }
 
     public void DetectDisplaysWMI()
@@ -82,27 +105,38 @@ public class WindowsDisplayApiWrapper
         }
     }
 
-    private bool MonitorEnum(IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData)
+    public void DetectDevices()
     {
-        // Ici, vous pouvez traiter chaque moniteur détecté
-        // Pour cet exemple, nous allons simplement imprimer les coordonnées du moniteur
-        Debug.WriteLine($"Monitor bounds are {lprcMonitor.Left}, {lprcMonitor.Top}, {lprcMonitor.Right}, {lprcMonitor.Bottom}");
+        try
+        {
+            DISPLAY_DEVICE displayDevice = new DISPLAY_DEVICE();
+            displayDevice.cb = Marshal.SizeOf(displayDevice);
+            DEVMODE devMode = new DEVMODE();
+            devMode.dmSize = (short)Marshal.SizeOf(devMode);
 
-        return true; // Pour continuer l'énumération
+            int deviceNum = 0;
+            while (EnumDisplayDevices(null, (uint)deviceNum, ref displayDevice, 0))
+            {
+                if (EnumDisplaySettings(displayDevice.DeviceName, ENUM_CURRENT_SETTINGS, ref devMode))
+                {
+                    bool isActive = (displayDevice.StateFlags & DISPLAY_DEVICE_ACTIVE) != 0;
+                    bool isPrimary = (displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) != 0;
+
+                    Debug.WriteLine($"Device: {displayDevice.DeviceName}");
+                    Debug.WriteLine($"Active: {isActive}");
+                    Debug.WriteLine($"Primary: {isPrimary}");
+                    Debug.WriteLine($"Resolution: {devMode.dmPelsWidth}x{devMode.dmPelsHeight}");
+                    Debug.WriteLine("---------------------------------------------------");
+                }
+
+                deviceNum++;
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine($"An error occurred: {e.Message}");
+        }
     }
 
-    public void SetDisplayState(int displayId, bool enable)
-    {
-        // Active ou désactive l'affichage spécifié
-    }
-
-    // Une structure RECT nécessaire pour l'utilisation avec l'API
-    [StructLayout(LayoutKind.Sequential)]
-    public struct RECT
-    {
-        public int Left;
-        public int Top;
-        public int Right;
-        public int Bottom;
-    }
+    
 }

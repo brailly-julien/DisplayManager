@@ -22,6 +22,7 @@ public class ScreenManagementService : IScreenManagementService
         // Implémentez la logique pour détecter les écrans connectés
         // Utilisez _windowsDisplayApiWrapper pour interagir avec les API Windows
         _windowsDisplayApiWrapper.DetectDisplaysWMI();
+        _windowsDisplayApiWrapper.DetectDevices();
     }
 
     public void ActivateScreen(int screenId)
