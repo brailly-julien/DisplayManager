@@ -109,25 +109,32 @@ public class WindowsDisplayApiWrapper
     {
         try
         {
+            int deviceNum = 0;
             DISPLAY_DEVICE displayDevice = new DISPLAY_DEVICE();
             displayDevice.cb = Marshal.SizeOf(displayDevice);
             DEVMODE devMode = new DEVMODE();
             devMode.dmSize = (short)Marshal.SizeOf(devMode);
 
-            int deviceNum = 0;
             while (EnumDisplayDevices(null, (uint)deviceNum, ref displayDevice, 0))
             {
+                bool isActive = (displayDevice.StateFlags & DISPLAY_DEVICE_ACTIVE) != 0;
+                bool isPrimary = (displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) != 0;
+
+
+                Debug.WriteLine($"Device Number: {deviceNum}");
+                Debug.WriteLine($"Device Name: {displayDevice.DeviceName}");
+                Debug.WriteLine($"Device String: {displayDevice.DeviceString}");
+                Debug.WriteLine($"Device ID: {displayDevice.DeviceID}");
+                Debug.WriteLine($"Device Key: {displayDevice.DeviceKey}");
+                Debug.WriteLine($"State Flags: {Convert.ToString(displayDevice.StateFlags, 2).PadLeft(32, '0')}");
+                Debug.WriteLine($"Active: {isActive}");
                 if (EnumDisplaySettings(displayDevice.DeviceName, ENUM_CURRENT_SETTINGS, ref devMode))
                 {
-                    bool isActive = (displayDevice.StateFlags & DISPLAY_DEVICE_ACTIVE) != 0;
-                    bool isPrimary = (displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) != 0;
-
-                    Debug.WriteLine($"Device: {displayDevice.DeviceName}");
-                    Debug.WriteLine($"Active: {isActive}");
                     Debug.WriteLine($"Primary: {isPrimary}");
+                    Debug.WriteLine($"Position: ({devMode.dmPositionX}, {devMode.dmPositionY})");
                     Debug.WriteLine($"Resolution: {devMode.dmPelsWidth}x{devMode.dmPelsHeight}");
-                    Debug.WriteLine("---------------------------------------------------");
                 }
+                Debug.WriteLine("---------------------------------------------------");
 
                 deviceNum++;
             }
@@ -137,6 +144,4 @@ public class WindowsDisplayApiWrapper
             Debug.WriteLine($"An error occurred: {e.Message}");
         }
     }
-
-    
 }
