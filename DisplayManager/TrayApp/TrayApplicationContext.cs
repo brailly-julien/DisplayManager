@@ -36,6 +36,8 @@ public class TrayApplicationContext : ApplicationContext
     {
         var screenService = new ScreenManagementService();
         screenService.DetectConnectedScreens();
+        //var displayService = new DisplayManagementService();
+        //displayService.PrintDisplayInfo();
     }
 
     private void ConfigureScreens(object sender, EventArgs e)

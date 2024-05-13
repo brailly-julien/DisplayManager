@@ -6,15 +6,12 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Management;
+using DisplayManager.Domain.Entities;
 
 namespace DisplayManager.Infrastructure.WindowsDisplayAPI;
 
 public class WindowsDisplayApiWrapper
 {
-    public WindowsDisplayApiWrapper()
-    {
-    }
-
     [DllImport("user32.dll")]
     static extern bool EnumDisplayDevices(string lpDevice, uint iDevNum, ref DISPLAY_DEVICE lpDisplayDevice, uint dwFlags);
 
@@ -22,8 +19,6 @@ public class WindowsDisplayApiWrapper
     static extern bool EnumDisplaySettings(string deviceName, int modeNum, ref DEVMODE devMode);
 
     private const int ENUM_CURRENT_SETTINGS = -1;
-    private const int DISPLAY_DEVICE_ACTIVE = 0x1;
-    private const int DISPLAY_DEVICE_PRIMARY_DEVICE = 0x4;
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
     public struct DISPLAY_DEVICE
@@ -77,71 +72,75 @@ public class WindowsDisplayApiWrapper
         public int dmPanningHeight;
     }
 
-    public void DetectDisplaysWMI()
+    public List<Screen> DetectDisplays()
     {
-        try
-        {
-            // Préparer la requête WMI
-            string wmiQuery = "SELECT * FROM Win32_PnPEntity WHERE PNPClass='Monitor'";
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher(wmiQuery);
+        List<Screen> displays = new List<Screen>();
 
-            // Exécuter la requête
-            foreach (ManagementObject obj in searcher.Get())
-            {
-                string name = obj["Name"] as string; // Nom convivial du moniteur
-                string deviceId = obj["DeviceID"] as string; // Identifiant unique du dispositif
-                string caption = obj["Caption"] as string; // Description courte
+        int deviceNum = 0;
+        DISPLAY_DEVICE displayDevice = new DISPLAY_DEVICE();
+        displayDevice.cb = Marshal.SizeOf(displayDevice);
 
-                // Afficher les informations
-                Debug.WriteLine($"Name: {name}");
-                Debug.WriteLine($"DeviceID: {deviceId}");
-                Debug.WriteLine($"Caption: {caption}");
-                Debug.WriteLine("---------------------------------------------------");
-            }
-        }
-        catch (Exception e)
+        while (EnumDisplayDevices(null, (uint)deviceNum, ref displayDevice, 0))
         {
-            Debug.WriteLine($"An error occurred: {e.Message}");
-        }
-    }
-
-    public void DetectDevices()
-    {
-        try
-        {
-            int deviceNum = 0;
-            DISPLAY_DEVICE displayDevice = new DISPLAY_DEVICE();
-            displayDevice.cb = Marshal.SizeOf(displayDevice);
             DEVMODE devMode = new DEVMODE();
             devMode.dmSize = (short)Marshal.SizeOf(devMode);
 
-            while (EnumDisplayDevices(null, (uint)deviceNum, ref displayDevice, 0))
+            Screen info = new Screen
             {
-                bool isActive = (displayDevice.StateFlags & DISPLAY_DEVICE_ACTIVE) != 0;
-                bool isPrimary = (displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) != 0;
+                DeviceName = displayDevice.DeviceName,
+                DeviceString = displayDevice.DeviceString,
+                DeviceID = displayDevice.DeviceID,
+                DeviceKey = displayDevice.DeviceKey,
+                StateFlags = displayDevice.StateFlags,
+                
+            };
 
-
-                Debug.WriteLine($"Device Number: {deviceNum}");
-                Debug.WriteLine($"Device Name: {displayDevice.DeviceName}");
-                Debug.WriteLine($"Device String: {displayDevice.DeviceString}");
-                Debug.WriteLine($"Device ID: {displayDevice.DeviceID}");
-                Debug.WriteLine($"Device Key: {displayDevice.DeviceKey}");
-                Debug.WriteLine($"State Flags: {Convert.ToString(displayDevice.StateFlags, 2).PadLeft(32, '0')}");
-                Debug.WriteLine($"Active: {isActive}");
-                if (EnumDisplaySettings(displayDevice.DeviceName, ENUM_CURRENT_SETTINGS, ref devMode))
-                {
-                    Debug.WriteLine($"Primary: {isPrimary}");
-                    Debug.WriteLine($"Position: ({devMode.dmPositionX}, {devMode.dmPositionY})");
-                    Debug.WriteLine($"Resolution: {devMode.dmPelsWidth}x{devMode.dmPelsHeight}");
-                }
-                Debug.WriteLine("---------------------------------------------------");
-
-                deviceNum++;
+            if (EnumDisplaySettings(displayDevice.DeviceName, ENUM_CURRENT_SETTINGS, ref devMode))
+            {
+                info.PositionX = devMode.dmPositionX;
+                info.PositionY = devMode.dmPositionY;
+                info.Width = devMode.dmPelsWidth;
+                info.Height = devMode.dmPelsHeight;
             }
+            displays.Add(info);
+
+            deviceNum++;
         }
-        catch (Exception e)
+        GetDisplayModes(displays);
+
+        return displays;
+    }
+
+    private void GetDisplayModes(List<Screen> displays)
+    {
+        for (int i = 0; i < displays.Count; i++)
         {
-            Debug.WriteLine($"An error occurred: {e.Message}");
+            Screen currentDisplay = displays[i];
+
+            // Si le moniteur n'est pas actif, définissez le mode sur "Deactivated"
+            if (!currentDisplay.IsActive)
+            {
+                currentDisplay.DisplayMode = "Deactivated";
+                continue; // Passez au moniteur suivant
+            }
+
+            // Comparer les positions pour déterminer le mode d'affichage
+            bool isDuplicated = false;
+
+            foreach (Screen otherDisplay in displays)
+            {
+                if (currentDisplay != otherDisplay &&
+                    currentDisplay.PositionX == otherDisplay.PositionX &&
+                    currentDisplay.PositionY == otherDisplay.PositionY &&
+                    currentDisplay.Width == otherDisplay.Width &&
+                    currentDisplay.Height == otherDisplay.Height)
+                {
+                    isDuplicated = true;
+                    break;
+                }
+            }
+
+            currentDisplay.DisplayMode = isDuplicated ? "Duplicated" : "Extended";
         }
     }
 }
