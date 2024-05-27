@@ -10,19 +10,22 @@ namespace DisplayManager.TrayApp;
 public class TrayApplicationContext : ApplicationContext
 {
     private NotifyIcon trayIcon;
+    private ScreenManagementService screenManagementService;
 
     public TrayApplicationContext()
     {
+        screenManagementService = new ScreenManagementService();
+
         // Initialisation du NotifyIcon
         trayIcon = new NotifyIcon()
         {
-            Icon = Properties.Resources.AppIcon, // Assurez-vous d'avoir une icône AppIcon dans les ressources du projet
+            Icon = Properties.Resources.AppIcon,
             ContextMenuStrip = new ContextMenuStrip(),
             Visible = true
         };
 
         // Ajout des items au menu contextuel de votre NotifyIcon
-        trayIcon.ContextMenuStrip.Items.Add("Détecter les écrans", null, OnDetectScreensClicked);
+        trayIcon.ContextMenuStrip.Items.Add("Refresh Displays", null, OnDetectScreensClicked);
         trayIcon.ContextMenuStrip.Items.Add("Configurer les écrans", null, ConfigureScreens);
         trayIcon.ContextMenuStrip.Items.Add("Activer/Désactiver écrans", null, ToggleScreens);
         trayIcon.ContextMenuStrip.Items.Add("-");
@@ -34,8 +37,7 @@ public class TrayApplicationContext : ApplicationContext
 
     private void OnDetectScreensClicked(object sender, EventArgs e)
     {
-        var screenService = new ScreenManagementService();
-        screenService.DetectConnectedScreens();
+        screenManagementService.DetectConnectedScreens();
         //var displayService = new DisplayManagementService();
         //displayService.PrintDisplayInfo();
     }

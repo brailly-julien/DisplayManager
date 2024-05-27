@@ -144,30 +144,4 @@ public class WindowsDisplayApiWrapper
         }
     }
 
-    public void DetectDisplaysWMI()
-    {
-        try
-        {
-            // Préparer la requête WMI
-            string wmiQuery = "SELECT * FROM Win32_PnPEntity WHERE PNPClass='Monitor'";
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher(wmiQuery);
-            // Exécuter la requête
-            foreach (ManagementObject obj in searcher.Get())
-            {
-                string name = obj["Name"] as string; // Nom convivial du moniteur
-                string deviceId = obj["DeviceID"] as string; // Identifiant unique du dispositif
-                string caption = obj["Caption"] as string; // Description courte
-
-                // Afficher les informations
-                Debug.WriteLine($"Name: {name}");
-                Debug.WriteLine($"DeviceID: {deviceId}");
-                Debug.WriteLine($"Caption: {caption}");
-                Debug.WriteLine("---------------------------------------------------");
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.WriteLine($"An error occurred: {e.Message}");
-        }
-    }
 }
