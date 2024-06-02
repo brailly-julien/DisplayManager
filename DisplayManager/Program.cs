@@ -18,8 +18,8 @@ static class Program
         Application.SetCompatibleTextRenderingDefault(false);
 
         // Créez le service de gestion des écrans et détectez les écrans immédiatement
-        var screenService = new ScreenManagementService();
-        screenService.DetectConnectedScreens();
+        //var screenService = new ScreenManagementService();
+        //screenService.DetectConnectedScreens();
 
         Application.Run(new TrayApplicationContext());
     }
