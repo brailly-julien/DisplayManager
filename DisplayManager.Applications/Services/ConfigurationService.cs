@@ -14,20 +14,19 @@ public class ConfigurationService
 {
     private readonly string configPath = "ScreenConfigs.json";
 
-    public bool TrySaveConfiguration(List<Screen> screens, string configName, out string errorMessage)
+    // Modification pour retourner un enum représentant le résultat de la tentative de sauvegarde
+    public SaveConfigResult TrySaveConfiguration(List<Screen> screens, string configName)
     {
         Dictionary<string, List<Screen>> configurations = LoadConfigurations();
 
         if (configurations.ContainsKey(configName))
         {
-            errorMessage = "Configuration name already exists.";
-            return false;
+            return SaveConfigResult.Exists; // Retourne Exists si le nom existe déjà
         }
 
         configurations[configName] = screens;
         File.WriteAllText(configPath, JsonConvert.SerializeObject(configurations, Formatting.Indented));
-        errorMessage = null;
-        return true;
+        return SaveConfigResult.Success; // Retourne Success si la sauvegarde est réussie
     }
 
     private Dictionary<string, List<Screen>> LoadConfigurations()
@@ -37,5 +36,12 @@ public class ConfigurationService
 
         string json = File.ReadAllText(configPath);
         return JsonConvert.DeserializeObject<Dictionary<string, List<Screen>>>(json) ?? new Dictionary<string, List<Screen>>();
+    }
+
+    public enum SaveConfigResult
+    {
+        Success,
+        Exists,
+        Error // Vous pouvez utiliser Error pour gérer les exceptions ou autres erreurs
     }
 }

@@ -40,14 +40,29 @@ public class TrayApplicationContext : ApplicationContext
         var screenService = new ScreenManagementService();
         var screens = screenService.GetDisplayDevices();
         var configService = new ConfigurationService();
-        string configName = PromptForConfigurationName();
 
+        string configName = PromptForConfigurationName();
         if (!string.IsNullOrEmpty(configName))
         {
-            if (!configService.TrySaveConfiguration(screens, configName, out string errorMessage))
+            var result = configService.TrySaveConfiguration(screens, configName);
+            while (result == ConfigurationService.SaveConfigResult.Exists)
             {
-                MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                // Peut-être demander un autre nom ici ou répéter le processus
+                var choice = MessageBox.Show("A configuration with this name already exists. Do you want to replace it?", "Configuration Exists", MessageBoxButtons.YesNoCancel);
+
+                if (choice == DialogResult.Yes)
+                {
+                    configService.TrySaveConfiguration(screens, configName); // Force save
+                    break;
+                }
+                else if (choice == DialogResult.No)
+                {
+                    configName = PromptForConfigurationName(); // Reprompt for a new name
+                    result = configService.TrySaveConfiguration(screens, configName);
+                }
+                else
+                {
+                    break; // Cancel the operation
+                }
             }
         }
         //var screenService = new ScreenManagementService();
