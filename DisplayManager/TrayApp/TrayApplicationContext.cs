@@ -10,10 +10,12 @@ namespace DisplayManager.TrayApp;
 public class TrayApplicationContext : ApplicationContext
 {
     private NotifyIcon trayIcon;
+    private ConfigurationService configService;
     //private ScreenManagementService screenManagementService;
 
     public TrayApplicationContext()
     {
+        configService = new ConfigurationService();
         //screenManagementService = new ScreenManagementService();
 
         // Initialisation du NotifyIcon
@@ -23,6 +25,8 @@ public class TrayApplicationContext : ApplicationContext
             ContextMenuStrip = new ContextMenuStrip(),
             Visible = true
         };
+
+        UpdateContextMenuWithConfigurations();
 
         // Ajout des items au menu contextuel de votre NotifyIcon
         trayIcon.ContextMenuStrip.Items.Add("Save new Configuration", null, OnDetectScreensClicked);
@@ -35,28 +39,54 @@ public class TrayApplicationContext : ApplicationContext
         trayIcon.ShowBalloonTip(1000, "DisplayManager", "L'application est lancée et prête à l'emploi.", ToolTipIcon.Info);
     }
 
+    private void UpdateContextMenuWithConfigurations()
+    {
+        var configurations = configService.LoadConfigurations();
+        foreach (var config in configurations)
+        {
+            var menuItem = new ToolStripMenuItem(config.Key, null, OnConfigurationSelected)
+            {
+                Tag = config.Value
+            };
+            trayIcon.ContextMenuStrip.Items.Insert(0, menuItem);
+        }
+    }
+
     private void OnDetectScreensClicked(object sender, EventArgs e)
     {
-        var screenService = new ScreenManagementService();
-        var screens = screenService.GetDisplayDevices();
-        var configService = new ConfigurationService();
-
+        var screens = new ScreenManagementService().GetDisplayDevices();
         string configName = PromptForConfigurationName();
+
         if (!string.IsNullOrEmpty(configName))
         {
             var result = configService.TrySaveConfiguration(screens, configName);
+            if (result == ConfigurationService.SaveConfigResult.Success)
+            {
+                var menuItem = new ToolStripMenuItem(configName, null, OnConfigurationSelected)
+                {
+                    Tag = screens
+                };
+                trayIcon.ContextMenuStrip.Items.Insert(0, menuItem);
+            }
             while (result == ConfigurationService.SaveConfigResult.Exists)
             {
                 var choice = MessageBox.Show("A configuration with this name already exists. Do you want to replace it?", "Configuration Exists", MessageBoxButtons.YesNoCancel);
 
                 if (choice == DialogResult.Yes)
                 {
-                    configService.TrySaveConfiguration(screens, configName); // Force save
+                    configService.TrySaveConfiguration(screens, configName);
+
+                    var menuItem = new ToolStripMenuItem(configName, null, OnConfigurationSelected)
+                    {
+                        Tag = screens
+                    };
+                    trayIcon.ContextMenuStrip.Items.Insert(0, menuItem);
+
                     break;
                 }
                 else if (choice == DialogResult.No)
                 {
-                    configName = PromptForConfigurationName(); // Reprompt for a new name
+                    configName = PromptForConfigurationName();
                     result = configService.TrySaveConfiguration(screens, configName);
                 }
                 else
@@ -70,6 +100,13 @@ public class TrayApplicationContext : ApplicationContext
         //screenManagementService.DetectConnectedScreens();
         //var displayService = new DisplayManagementService();
         //displayService.PrintDisplayInfo();
+    }
+
+    private void OnConfigurationSelected(object sender, EventArgs e)
+    {
+        var menuItem = sender as ToolStripMenuItem;
+        var screens = menuItem.Tag as List<Screen>;
+        // Logique pour appliquer la configuration sélectionnée
     }
 
     private string PromptForConfigurationName()

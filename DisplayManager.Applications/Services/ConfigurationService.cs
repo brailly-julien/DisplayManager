@@ -29,7 +29,7 @@ public class ConfigurationService
         return SaveConfigResult.Success; // Retourne Success si la sauvegarde est réussie
     }
 
-    private Dictionary<string, List<Screen>> LoadConfigurations()
+    public Dictionary<string, List<Screen>> LoadConfigurations()
     {
         if (!File.Exists(configPath))
             return new Dictionary<string, List<Screen>>();
