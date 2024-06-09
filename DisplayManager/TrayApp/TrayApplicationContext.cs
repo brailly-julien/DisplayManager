@@ -30,9 +30,9 @@ public class TrayApplicationContext : ApplicationContext
 
         // Ajout des items au menu contextuel de votre NotifyIcon
         trayIcon.ContextMenuStrip.Items.Add("Save new Configuration", null, OnDetectScreensClicked);
-        trayIcon.ContextMenuStrip.Items.Add("Configurer les écrans", null, ConfigureScreens);
-        trayIcon.ContextMenuStrip.Items.Add("Activer/Désactiver écrans", null, ToggleScreens);
-        trayIcon.ContextMenuStrip.Items.Add("-");
+        //trayIcon.ContextMenuStrip.Items.Add("Configurer les écrans", null, ConfigureScreens);
+        //trayIcon.ContextMenuStrip.Items.Add("Activer/Désactiver écrans", null, ToggleScreens);
+        //trayIcon.ContextMenuStrip.Items.Add("-");
         trayIcon.ContextMenuStrip.Items.Add("Quitter", null, Exit);
 
         // Affiche une bulle de notification au démarrage
@@ -76,11 +76,17 @@ public class TrayApplicationContext : ApplicationContext
                 {
                     configService.TrySaveConfiguration(screens, configName);
 
-                    var menuItem = new ToolStripMenuItem(configName, null, OnConfigurationSelected)
+                    var existingMenuItem = trayIcon.ContextMenuStrip.Items.Cast<ToolStripMenuItem>().FirstOrDefault(item => item.Text == configName);
+                    if (existingMenuItem != null)
+                        existingMenuItem.Tag = screens;
+                    else
                     {
-                        Tag = screens
-                    };
-                    trayIcon.ContextMenuStrip.Items.Insert(0, menuItem);
+                        var menuItem = new ToolStripMenuItem(configName, null, OnConfigurationSelected)
+                        {
+                            Tag = screens
+                        };
+                        trayIcon.ContextMenuStrip.Items.Insert(0, menuItem);
+                    }
 
                     break;
                 }
@@ -91,7 +97,7 @@ public class TrayApplicationContext : ApplicationContext
                 }
                 else
                 {
-                    break; // Cancel the operation
+                    break;
                 }
             }
         }
@@ -113,15 +119,32 @@ public class TrayApplicationContext : ApplicationContext
     {
         using (var form = new Form())
         {
-            var inputBox = new TextBox() { Left = 50, Top = 50, Width = 200 };
-            var buttonOk = new Button() { Text = "Ok", Left = 150, Width = 100, Top = 100, DialogResult = DialogResult.OK };
+            form.Text = "Enter Config Name";
+            var inputBox = new TextBox() { Left = 50, Top = 20, Width = 200 };
+
+            var buttonOk = new Button() { Text = "Ok", Left = 150, Top = 50, Width = 100, DialogResult = DialogResult.OK };
+            var buttonCancel = new Button() { Text = "Cancel", Left = 50, Top = 50, Width = 100, DialogResult = DialogResult.Cancel };
+
             form.Controls.Add(inputBox);
             form.Controls.Add(buttonOk);
+            form.Controls.Add(buttonCancel);
             form.AcceptButton = buttonOk;
+            form.CancelButton = buttonCancel;
 
-            return form.ShowDialog() == DialogResult.OK ? inputBox.Text : null;
+            var result = form.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                if (string.IsNullOrWhiteSpace(inputBox.Text) || inputBox.Text == "Enter a name...")
+                {
+                    MessageBox.Show("Please enter a valid configuration name.", "Invalid Name", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return null; // You could loop back to prompting for the name again here if desired
+                }
+                return inputBox.Text;
+            }
+            return null;
         }
     }
+
 
     private void ConfigureScreens(object sender, EventArgs e)
     {
