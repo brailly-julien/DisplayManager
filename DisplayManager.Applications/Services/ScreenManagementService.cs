@@ -1,6 +1,7 @@
 ﻿using DisplayManager.Domain.Entities;
 using DisplayManager.Domain.Interfaces;
 using DisplayManager.Infrastructure.WindowsDisplayAPI;
+using System.Collections.Generic;
 
 namespace DisplayManager.Applications.Services;
 
@@ -13,14 +14,25 @@ public class ScreenManagementService : IScreenManagementService
         _windowsDisplayApiWrapper = new WindowsDisplayApiWrapper();
     }
 
-    public List<Screen> GetDisplayDevices()
+    private List<DisplaysConfiguration> GetDisplayDevices()
     {
-        return _windowsDisplayApiWrapper.DetectDisplays();
+        DisplaysConfiguration display = new()
+        {
+            ConfigName = "Default Configuration", // Assurez-vous de donner un nom
+            IsDefaultConfig = true, // Assumer une valeur par défaut ou déduire selon votre logique
+            Screens = _windowsDisplayApiWrapper.DetectDisplays()
+        };
+
+        // Créer une liste de configurations d'écrans et ajouter la configuration ci-dessus
+        List<DisplaysConfiguration> displaysConfig = new();
+        displaysConfig.Add(display);
+
+        return displaysConfig;
     }
 
-    public void PrintDisplayInfo()
+    public void PrintDisplayInfo(List<DisplaysConfiguration> displaysConfig)
     {
-        var displays = GetDisplayDevices();
+        var displays = displaysConfig.First().Screens;
         foreach (var display in displays)
         {
             System.Diagnostics.Debug.WriteLine($"Device Name: {display.DeviceName}");
@@ -37,13 +49,15 @@ public class ScreenManagementService : IScreenManagementService
         }
     }
 
-    public void DetectConnectedScreens()
+    public List<DisplaysConfiguration> DetectConnectedScreens()
     {
+        List<DisplaysConfiguration> displaysConfig = GetDisplayDevices();
         // Implémentez la logique pour détecter les écrans connectés
         // Utilisez _windowsDisplayApiWrapper pour interagir avec les API Windows
-        PrintDisplayInfo();
+        PrintDisplayInfo(displaysConfig);
         /*_windowsDisplayApiWrapper.DetectDisplaysWMI();
         _windowsDisplayApiWrapper.DetectDevices();*/
+        return displaysConfig;
     }
 
     public void ActivateScreen(int screenId)

@@ -15,27 +15,50 @@ public class ConfigurationService
     private readonly string configPath = "ScreenConfigs.json";
 
     // Modification pour retourner un enum représentant le résultat de la tentative de sauvegarde
-    public SaveConfigResult TrySaveConfiguration(List<Screen> screens, string configName)
-    {
-        Dictionary<string, List<Screen>> configurations = LoadConfigurations();
+    //public SaveConfigResult TrySaveConfiguration(List<Screen> screens, string configName)
+    //{
+    //    Dictionary<string, List<Screen>> configurations = LoadConfigurations();
 
-        if (configurations.ContainsKey(configName))
+    //    if (configurations.ContainsKey(configName))
+    //    {
+    //        return SaveConfigResult.Exists; // Retourne Exists si le nom existe déjà
+    //    }
+
+    //    configurations[configName] = screens;
+    //    File.WriteAllText(configPath, JsonConvert.SerializeObject(configurations, Formatting.Indented));
+    //    return SaveConfigResult.Success; // Retourne Success si la sauvegarde est réussie
+    //}
+
+    //public Dictionary<string, List<Screen>> LoadConfigurations()
+    //{
+    //    if (!File.Exists(configPath))
+    //        return new Dictionary<string, List<Screen>>();
+
+    //    string json = File.ReadAllText(configPath);
+    //    return JsonConvert.DeserializeObject<Dictionary<string, List<Screen>>>(json) ?? new Dictionary<string, List<Screen>>();
+    //}
+
+    public SaveConfigResult TrySaveConfiguration2(DisplaysConfiguration config)
+    {
+        var configurations = LoadConfigurations2();
+
+        if (configurations.Any(c => c.ConfigName == config.ConfigName))
         {
-            return SaveConfigResult.Exists; // Retourne Exists si le nom existe déjà
+            return SaveConfigResult.Exists; // Nom déjà utilisé
         }
 
-        configurations[configName] = screens;
+        configurations.Add(config);
         File.WriteAllText(configPath, JsonConvert.SerializeObject(configurations, Formatting.Indented));
-        return SaveConfigResult.Success; // Retourne Success si la sauvegarde est réussie
+        return SaveConfigResult.Success;
     }
 
-    public Dictionary<string, List<Screen>> LoadConfigurations()
+    public List<DisplaysConfiguration> LoadConfigurations2()
     {
         if (!File.Exists(configPath))
-            return new Dictionary<string, List<Screen>>();
+            return new List<DisplaysConfiguration>();
 
         string json = File.ReadAllText(configPath);
-        return JsonConvert.DeserializeObject<Dictionary<string, List<Screen>>>(json) ?? new Dictionary<string, List<Screen>>();
+        return JsonConvert.DeserializeObject<List<DisplaysConfiguration>>(json) ?? [];
     }
 
     public enum SaveConfigResult

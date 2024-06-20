@@ -9,9 +9,7 @@ namespace DisplayManager.Domain.Interfaces;
 
 public interface IScreenManagementService
 {
-    void DetectConnectedScreens();
-    List<Screen> GetDisplayDevices();
-    void PrintDisplayInfo();
+    List<DisplaysConfiguration> DetectConnectedScreens();
     void ActivateScreen(int screenId);
     void DesactivateScreen(int screenId);
 }

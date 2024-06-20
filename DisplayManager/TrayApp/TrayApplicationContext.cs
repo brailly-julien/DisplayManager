@@ -1,16 +1,18 @@
 ﻿using DisplayManager.Applications.Services;
+using DisplayManager.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static DisplayManager.Applications.Services.ConfigurationService;
 
 namespace DisplayManager.TrayApp;
 
 public class TrayApplicationContext : ApplicationContext
 {
-    private NotifyIcon trayIcon;
-    private ConfigurationService configService;
+    private readonly NotifyIcon trayIcon;
+    private readonly ConfigurationService configService;
     //private ScreenManagementService screenManagementService;
 
     public TrayApplicationContext()
@@ -29,90 +31,174 @@ public class TrayApplicationContext : ApplicationContext
         UpdateContextMenuWithConfigurations();
 
         // Ajout des items au menu contextuel de votre NotifyIcon
+
+        trayIcon.ContextMenuStrip.Items.Add("-");
         trayIcon.ContextMenuStrip.Items.Add("Save new Configuration", null, OnDetectScreensClicked);
         //trayIcon.ContextMenuStrip.Items.Add("Configurer les écrans", null, ConfigureScreens);
         //trayIcon.ContextMenuStrip.Items.Add("Activer/Désactiver écrans", null, ToggleScreens);
         //trayIcon.ContextMenuStrip.Items.Add("-");
         trayIcon.ContextMenuStrip.Items.Add("Quitter", null, Exit);
-
         // Affiche une bulle de notification au démarrage
         trayIcon.ShowBalloonTip(1000, "DisplayManager", "L'application est lancée et prête à l'emploi.", ToolTipIcon.Info);
     }
 
     private void UpdateContextMenuWithConfigurations()
     {
-        var configurations = configService.LoadConfigurations();
+        var configurations = configService.LoadConfigurations2();
         foreach (var config in configurations)
         {
-            var menuItem = new ToolStripMenuItem(config.Key, null, OnConfigurationSelected)
+            // Création d'un menuItem pour chaque configuration
+            var menuItem = new ToolStripMenuItem(config.ConfigName, null, OnConfigurationSelected)
             {
-                Tag = config.Value
+                Tag = config // Stockez l'objet DisplaysConfiguration dans le Tag pour un accès facile
             };
-            trayIcon.ContextMenuStrip.Items.Insert(0, menuItem);
+            trayIcon.ContextMenuStrip.Items.Insert(0, menuItem); // Insérez au début pour que les plus récents apparaissent en haut
         }
     }
 
+    //private void OnDetectScreensClicked(object sender, EventArgs e)
+    //{
+    //    var displaysConfig = new ScreenManagementService().DetectConnectedScreens().First();
+    //    var screens = displaysConfig.Screens;
+
+    //    string configName = PromptForConfigurationName();
+
+    //    if (!string.IsNullOrEmpty(configName))
+    //    {
+    //        var result = configService.TrySaveConfiguration(displaysConfig.Screens, configName);
+    //        if (result == ConfigurationService.SaveConfigResult.Success)
+    //        {
+    //            var menuItem = new ToolStripMenuItem(configName, null, OnConfigurationSelected)
+    //            {
+    //                Tag = displaysConfig.Screens
+    //            };
+    //            trayIcon.ContextMenuStrip.Items.Insert(0, menuItem);
+    //        }
+    //        while (result == ConfigurationService.SaveConfigResult.Exists)
+    //        {
+    //            var choice = MessageBox.Show("A configuration with this name already exists. Do you want to replace it?", "Configuration Exists", MessageBoxButtons.YesNoCancel);
+
+    //            if (choice == DialogResult.Yes)
+    //            {
+    //                configService.TrySaveConfiguration(displaysConfig.Screens, configName);
+
+    //                var existingMenuItem = trayIcon.ContextMenuStrip.Items.Cast<ToolStripMenuItem>().FirstOrDefault(item => item.Text == configName);
+    //                if (existingMenuItem != null)
+    //                    existingMenuItem.Tag = displaysConfig.Screens;
+    //                else
+    //                {
+    //                    var menuItem = new ToolStripMenuItem(configName, null, OnConfigurationSelected)
+    //                    {
+    //                        Tag = displaysConfig.Screens
+    //                    };
+    //                    trayIcon.ContextMenuStrip.Items.Insert(0, menuItem);
+    //                }
+
+    //                break;
+    //            }
+    //            else if (choice == DialogResult.No)
+    //            {
+    //                configName = PromptForConfigurationName();
+    //                result = configService.TrySaveConfiguration(displaysConfig.Screens, configName);
+    //            }
+    //            else
+    //            {
+    //                break;
+    //            }
+    //        }
+    //    }
+    //    //var screenService = new ScreenManagementService();
+    //    //screenService.DetectConnectedScreens();
+    //    //screenManagementService.DetectConnectedScreens();
+    //    //var displayService = new DisplayManagementService();
+    //    //displayService.PrintDisplayInfo();
+    //}
+
     private void OnDetectScreensClicked(object sender, EventArgs e)
     {
-        var screens = new ScreenManagementService().GetDisplayDevices();
+        var configService = new ConfigurationService();
+        var screenService = new ScreenManagementService();
+        var config = screenService.DetectConnectedScreens().First(); // Suppose this method returns List<DisplaysConfiguration>
         string configName = PromptForConfigurationName();
 
         if (!string.IsNullOrEmpty(configName))
         {
-            var result = configService.TrySaveConfiguration(screens, configName);
-            if (result == ConfigurationService.SaveConfigResult.Success)
+            config.ConfigName = configName;
+            var result = configService.TrySaveConfiguration2(config);
+            if (result == SaveConfigResult.Success)
             {
-                var menuItem = new ToolStripMenuItem(configName, null, OnConfigurationSelected)
+                var menuItem = new ToolStripMenuItem(config.ConfigName, null, OnConfigurationSelected)
                 {
-                    Tag = screens
+                    Tag = config
                 };
                 trayIcon.ContextMenuStrip.Items.Insert(0, menuItem);
             }
-            while (result == ConfigurationService.SaveConfigResult.Exists)
+            else if (result == SaveConfigResult.Exists)
             {
-                var choice = MessageBox.Show("A configuration with this name already exists. Do you want to replace it?", "Configuration Exists", MessageBoxButtons.YesNoCancel);
-
-                if (choice == DialogResult.Yes)
-                {
-                    configService.TrySaveConfiguration(screens, configName);
-
-                    var existingMenuItem = trayIcon.ContextMenuStrip.Items.Cast<ToolStripMenuItem>().FirstOrDefault(item => item.Text == configName);
-                    if (existingMenuItem != null)
-                        existingMenuItem.Tag = screens;
-                    else
-                    {
-                        var menuItem = new ToolStripMenuItem(configName, null, OnConfigurationSelected)
-                        {
-                            Tag = screens
-                        };
-                        trayIcon.ContextMenuStrip.Items.Insert(0, menuItem);
-                    }
-
-                    break;
-                }
-                else if (choice == DialogResult.No)
-                {
-                    configName = PromptForConfigurationName();
-                    result = configService.TrySaveConfiguration(screens, configName);
-                }
-                else
-                {
-                    break;
-                }
+                HandleExistingConfiguration(config);
             }
         }
-        //var screenService = new ScreenManagementService();
-        //screenService.DetectConnectedScreens();
-        //screenManagementService.DetectConnectedScreens();
-        //var displayService = new DisplayManagementService();
-        //displayService.PrintDisplayInfo();
     }
+
+    private void HandleExistingConfiguration(DisplaysConfiguration config)
+    {
+        var choice = MessageBox.Show("A configuration with this name already exists. Do you want to replace it?", "Configuration Exists", MessageBoxButtons.YesNoCancel);
+        if (choice == DialogResult.Yes)
+        {
+            var configService = new ConfigurationService();
+            configService.TrySaveConfiguration2(config); // Assuming overwrite logic is handled inside
+
+            var existingMenuItem = trayIcon.ContextMenuStrip.Items.Cast<ToolStripMenuItem>().FirstOrDefault(item => item.Text == config.ConfigName);
+            if (existingMenuItem != null)
+                existingMenuItem.Tag = config;
+            else
+            {
+                var menuItem = new ToolStripMenuItem(config.ConfigName, null, OnConfigurationSelected)
+                {
+                    Tag = config
+                };
+                trayIcon.ContextMenuStrip.Items.Insert(0, menuItem);
+            }
+        }
+        else if (choice == DialogResult.No)
+        {
+            // Optionally reprompt for name or handle user cancellation
+        }
+    }
+
+
+    //private void OnConfigurationSelected(object sender, EventArgs e)
+    //{
+    //    var menuItem = sender as ToolStripMenuItem;
+    //    var screens = menuItem.Tag as List<Domain.Entities.Screen>;
+    //    // Logique pour appliquer la configuration sélectionnée
+    //}
 
     private void OnConfigurationSelected(object sender, EventArgs e)
     {
         var menuItem = sender as ToolStripMenuItem;
-        var screens = menuItem.Tag as List<Screen>;
-        // Logique pour appliquer la configuration sélectionnée
+        var config = menuItem.Tag as DisplaysConfiguration; // Obtenir la configuration depuis le Tag du menuItem
+
+        if (config != null)
+        {
+            // Logique pour appliquer la configuration sélectionnée
+            // Exemple: Changer la configuration d'affichage des écrans selon les détails dans config
+            ApplyDisplayConfiguration(config);
+        }
+    }
+    private void ApplyDisplayConfiguration(DisplaysConfiguration config)
+    {
+        // Cette méthode devrait appliquer la configuration à l'ensemble des écrans
+        // selon les détails contenus dans la configuration fournie
+        // Vous aurez probablement besoin de méthodes supplémentaires pour changer les configurations d'affichage actuelles
+
+        foreach (var screen in config.Screens)
+        {
+            // Appliquez la configuration pour chaque écran
+            // Par exemple, ajuster la résolution, l'orientation, etc.
+            Console.WriteLine($"Applying settings for {screen.DeviceName} - Mode: {screen.DisplayMode}");
+            // Ici, vous pourriez appeler d'autres fonctions API pour ajuster les paramètres réels du moniteur
+        }
     }
 
     private string PromptForConfigurationName()
@@ -137,7 +223,7 @@ public class TrayApplicationContext : ApplicationContext
                 if (string.IsNullOrWhiteSpace(inputBox.Text) || inputBox.Text == "Enter a name...")
                 {
                     MessageBox.Show("Please enter a valid configuration name.", "Invalid Name", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return null; // You could loop back to prompting for the name again here if desired
+                    return null;
                 }
                 return inputBox.Text;
             }
