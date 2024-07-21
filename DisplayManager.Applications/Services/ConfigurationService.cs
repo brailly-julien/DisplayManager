@@ -44,7 +44,7 @@ public class ConfigurationService
 
         if (configurations.Any(c => c.ConfigName == config.ConfigName))
         {
-            return SaveConfigResult.Exists; // Nom déjà utilisé
+            return SaveConfigResult.Exists;
         }
 
         configurations.Add(config);

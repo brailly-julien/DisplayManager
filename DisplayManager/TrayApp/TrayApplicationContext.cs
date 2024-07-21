@@ -1,5 +1,6 @@
 ﻿using DisplayManager.Applications.Services;
 using DisplayManager.Domain.Entities;
+using DisplayManager.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,15 +35,12 @@ public class TrayApplicationContext : ApplicationContext
 
         trayIcon.ContextMenuStrip.Items.Add("-");
         trayIcon.ContextMenuStrip.Items.Add("Save new Configuration", null, OnDetectScreensClicked);
-        //trayIcon.ContextMenuStrip.Items.Add("Configurer les écrans", null, ConfigureScreens);
-        //trayIcon.ContextMenuStrip.Items.Add("Activer/Désactiver écrans", null, ToggleScreens);
-        //trayIcon.ContextMenuStrip.Items.Add("-");
         trayIcon.ContextMenuStrip.Items.Add("Quitter", null, Exit);
         // Affiche une bulle de notification au démarrage
         trayIcon.ShowBalloonTip(1000, "DisplayManager", "L'application est lancée et prête à l'emploi.", ToolTipIcon.Info);
     }
 
-    private void UpdateContextMenuWithConfigurations()
+    private void UpdateContextMenuWithConfigurations()//TODO new menu for rename / remove config or modify the bool "isDefault"
     {
         var configurations = configService.LoadConfigurations2();
         foreach (var config in configurations)
@@ -56,65 +54,12 @@ public class TrayApplicationContext : ApplicationContext
         }
     }
 
-    //private void OnDetectScreensClicked(object sender, EventArgs e)
-    //{
-    //    var displaysConfig = new ScreenManagementService().DetectConnectedScreens().First();
-    //    var screens = displaysConfig.Screens;
-
-    //    string configName = PromptForConfigurationName();
-
-    //    if (!string.IsNullOrEmpty(configName))
-    //    {
-    //        var result = configService.TrySaveConfiguration(displaysConfig.Screens, configName);
-    //        if (result == ConfigurationService.SaveConfigResult.Success)
-    //        {
-    //            var menuItem = new ToolStripMenuItem(configName, null, OnConfigurationSelected)
-    //            {
-    //                Tag = displaysConfig.Screens
-    //            };
-    //            trayIcon.ContextMenuStrip.Items.Insert(0, menuItem);
-    //        }
-    //        while (result == ConfigurationService.SaveConfigResult.Exists)
-    //        {
-    //            var choice = MessageBox.Show("A configuration with this name already exists. Do you want to replace it?", "Configuration Exists", MessageBoxButtons.YesNoCancel);
-
-    //            if (choice == DialogResult.Yes)
-    //            {
-    //                configService.TrySaveConfiguration(displaysConfig.Screens, configName);
-
-    //                var existingMenuItem = trayIcon.ContextMenuStrip.Items.Cast<ToolStripMenuItem>().FirstOrDefault(item => item.Text == configName);
-    //                if (existingMenuItem != null)
-    //                    existingMenuItem.Tag = displaysConfig.Screens;
-    //                else
-    //                {
-    //                    var menuItem = new ToolStripMenuItem(configName, null, OnConfigurationSelected)
-    //                    {
-    //                        Tag = displaysConfig.Screens
-    //                    };
-    //                    trayIcon.ContextMenuStrip.Items.Insert(0, menuItem);
-    //                }
-
-    //                break;
-    //            }
-    //            else if (choice == DialogResult.No)
-    //            {
-    //                configName = PromptForConfigurationName();
-    //                result = configService.TrySaveConfiguration(displaysConfig.Screens, configName);
-    //            }
-    //            else
-    //            {
-    //                break;
-    //            }
-    //        }
-    //    }
-    //    //var screenService = new ScreenManagementService();
-    //    //screenService.DetectConnectedScreens();
-    //    //screenManagementService.DetectConnectedScreens();
-    //    //var displayService = new DisplayManagementService();
-    //    //displayService.PrintDisplayInfo();
-    //}
-
     private void OnDetectScreensClicked(object sender, EventArgs e)
+    {
+        AddNewConfig();
+    }
+
+    private void AddNewConfig()
     {
         var configService = new ConfigurationService();
         var screenService = new ScreenManagementService();
@@ -135,18 +80,19 @@ public class TrayApplicationContext : ApplicationContext
             }
             else if (result == SaveConfigResult.Exists)
             {
-                HandleExistingConfiguration(config);
+                HandleExistingConfiguration(config, configService);
             }
         }
     }
 
-    private void HandleExistingConfiguration(DisplaysConfiguration config)
+    private void HandleExistingConfiguration(DisplaysConfiguration config, ConfigurationService configService)
     {
-        var choice = MessageBox.Show("A configuration with this name already exists. Do you want to replace it?", "Configuration Exists", MessageBoxButtons.YesNoCancel);
-        if (choice == DialogResult.Yes)
+        var customDialog = new CustomConfigDialog();
+        var result = customDialog.ShowDialog(config.ConfigName);
+
+        if (result == DialogResult.Yes)
         {
-            var configService = new ConfigurationService();
-            configService.TrySaveConfiguration2(config); // Assuming overwrite logic is handled inside
+            configService.TrySaveConfiguration2(config);
 
             var existingMenuItem = trayIcon.ContextMenuStrip.Items.Cast<ToolStripMenuItem>().FirstOrDefault(item => item.Text == config.ConfigName);
             if (existingMenuItem != null)
@@ -160,19 +106,12 @@ public class TrayApplicationContext : ApplicationContext
                 trayIcon.ContextMenuStrip.Items.Insert(0, menuItem);
             }
         }
-        else if (choice == DialogResult.No)
+        else if (result == DialogResult.No)
         {
-            // Optionally reprompt for name or handle user cancellation
+            AddNewConfig();
         }
     }
 
-
-    //private void OnConfigurationSelected(object sender, EventArgs e)
-    //{
-    //    var menuItem = sender as ToolStripMenuItem;
-    //    var screens = menuItem.Tag as List<Domain.Entities.Screen>;
-    //    // Logique pour appliquer la configuration sélectionnée
-    //}
 
     private void OnConfigurationSelected(object sender, EventArgs e)
     {
@@ -201,7 +140,7 @@ public class TrayApplicationContext : ApplicationContext
         }
     }
 
-    private string PromptForConfigurationName()
+    private string PromptForConfigurationName()//ToDo create the Form 
     {
         using (var form = new Form())
         {
@@ -230,7 +169,6 @@ public class TrayApplicationContext : ApplicationContext
             return null;
         }
     }
-
 
     private void ConfigureScreens(object sender, EventArgs e)
     {

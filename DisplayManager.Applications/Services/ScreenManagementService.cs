@@ -19,7 +19,7 @@ public class ScreenManagementService : IScreenManagementService
         DisplaysConfiguration display = new()
         {
             ConfigName = "Default Configuration", // Assurez-vous de donner un nom
-            IsDefaultConfig = true, // Assumer une valeur par défaut ou déduire selon votre logique
+            IsDefaultConfig = false, // Assumer une valeur par défaut ou déduire selon votre logique
             Screens = _windowsDisplayApiWrapper.DetectDisplays()
         };
 
@@ -52,8 +52,6 @@ public class ScreenManagementService : IScreenManagementService
     public List<DisplaysConfiguration> DetectConnectedScreens()
     {
         List<DisplaysConfiguration> displaysConfig = GetDisplayDevices();
-        // Implémentez la logique pour détecter les écrans connectés
-        // Utilisez _windowsDisplayApiWrapper pour interagir avec les API Windows
         PrintDisplayInfo(displaysConfig);
         /*_windowsDisplayApiWrapper.DetectDisplaysWMI();
         _windowsDisplayApiWrapper.DetectDevices();*/
