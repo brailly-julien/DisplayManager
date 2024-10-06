@@ -38,9 +38,9 @@ public class ConfigurationService
     //    return JsonConvert.DeserializeObject<Dictionary<string, List<Screen>>>(json) ?? new Dictionary<string, List<Screen>>();
     //}
 
-    public SaveConfigResult TrySaveConfiguration2(DisplaysConfiguration config)
+    public SaveConfigResult TrySaveConfiguration(DisplaysConfiguration config)
     {
-        var configurations = LoadConfigurations2();
+        var configurations = LoadConfigurations();
 
         if (configurations.Any(c => c.ConfigName == config.ConfigName))
         {
@@ -52,7 +52,7 @@ public class ConfigurationService
         return SaveConfigResult.Success;
     }
 
-    public List<DisplaysConfiguration> LoadConfigurations2()
+    public List<DisplaysConfiguration> LoadConfigurations()
     {
         if (!File.Exists(configPath))
             return new List<DisplaysConfiguration>();
@@ -60,6 +60,37 @@ public class ConfigurationService
         string json = File.ReadAllText(configPath);
         return JsonConvert.DeserializeObject<List<DisplaysConfiguration>>(json) ?? [];
     }
+
+    public bool DeleteConfiguration(string configName)
+    {
+        var configurations = LoadConfigurations();
+        var configToDelete = configurations.FirstOrDefault(c => c.ConfigName == configName);
+
+        if (configToDelete != null)
+        {
+            configurations.Remove(configToDelete);
+            File.WriteAllText(configPath, JsonConvert.SerializeObject(configurations, Formatting.Indented));
+            return true;
+        }
+
+        return false; // Retourne false si la configuration n'a pas été trouvée
+    }
+
+    public bool RenameConfiguration(string oldName, string newName)
+    {
+        var configurations = LoadConfigurations();
+        var configToRename = configurations.FirstOrDefault(c => c.ConfigName == oldName);
+
+        if (configToRename != null && !configurations.Any(c => c.ConfigName == newName))
+        {
+            configToRename.ConfigName = newName;
+            File.WriteAllText(configPath, JsonConvert.SerializeObject(configurations, Formatting.Indented));
+            return true;
+        }
+
+        return false; // Retourne false si la configuration n'a pas été trouvée ou le nouveau nom existe déjà
+    }
+
 
     public enum SaveConfigResult
     {

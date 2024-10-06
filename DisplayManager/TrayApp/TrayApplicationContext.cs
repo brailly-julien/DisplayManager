@@ -32,26 +32,53 @@ public class TrayApplicationContext : ApplicationContext
         UpdateContextMenuWithConfigurations();
 
         // Ajout des items au menu contextuel de votre NotifyIcon
+        InitialItems();
+        //trayIcon.ContextMenuStrip.Items.Add("-");
+        //trayIcon.ContextMenuStrip.Items.Add("Save new Configuration", null, OnDetectScreensClicked);
+        //trayIcon.ContextMenuStrip.Items.Add("Quitter", null, Exit);
+        // Affiche une bulle de notification au démarrage
+        //trayIcon.ShowBalloonTip(1000, "DisplayManager", "L'application est lancée et prête à l'emploi.", ToolTipIcon.Info);
+    }
 
+    private void UpdateContextMenuWithConfigurations()
+    {
+        var configurations = configService.LoadConfigurations();
+        foreach (var config in configurations)
+        {
+            // Création d'un menuItem pour chaque configuration avec un sous-menu
+            var menuItem = new ToolStripMenuItem(config.ConfigName)
+            {
+                Tag = config
+            };
+
+            // Sous-menu pour définir comme configuration par défaut
+            var setDefaultItem = new ToolStripMenuItem("Set as Default", null, (sender, e) => SetAsDefaultConfig(config))
+            {
+                Checked = config.IsDefaultConfig,
+                CheckOnClick = true
+            };
+
+            // Sous-menu pour renommer la configuration
+            var renameItem = new ToolStripMenuItem("Rename", null, (sender, e) => RenameConfig(config));
+
+            // Sous-menu pour supprimer la configuration
+            var deleteItem = new ToolStripMenuItem("Delete", null, (sender, e) => DeleteConfig(config));
+
+            // Ajout des sous-menus au menu principal de la configuration
+            menuItem.DropDownItems.Add(setDefaultItem);
+            menuItem.DropDownItems.Add(renameItem);
+            menuItem.DropDownItems.Add(deleteItem);
+
+            // Ajouter le menu de configuration à la barre d'état système
+            trayIcon.ContextMenuStrip.Items.Insert(0, menuItem);
+        }
+    }
+
+    private void InitialItems()
+    {
         trayIcon.ContextMenuStrip.Items.Add("-");
         trayIcon.ContextMenuStrip.Items.Add("Save new Configuration", null, OnDetectScreensClicked);
         trayIcon.ContextMenuStrip.Items.Add("Quitter", null, Exit);
-        // Affiche une bulle de notification au démarrage
-        trayIcon.ShowBalloonTip(1000, "DisplayManager", "L'application est lancée et prête à l'emploi.", ToolTipIcon.Info);
-    }
-
-    private void UpdateContextMenuWithConfigurations()//TODO new menu for rename / remove config or modify the bool "isDefault"
-    {
-        var configurations = configService.LoadConfigurations2();
-        foreach (var config in configurations)
-        {
-            // Création d'un menuItem pour chaque configuration
-            var menuItem = new ToolStripMenuItem(config.ConfigName, null, OnConfigurationSelected)
-            {
-                Tag = config // Stockez l'objet DisplaysConfiguration dans le Tag pour un accès facile
-            };
-            trayIcon.ContextMenuStrip.Items.Insert(0, menuItem); // Insérez au début pour que les plus récents apparaissent en haut
-        }
     }
 
     private void OnDetectScreensClicked(object sender, EventArgs e)
@@ -69,7 +96,7 @@ public class TrayApplicationContext : ApplicationContext
         if (!string.IsNullOrEmpty(configName))
         {
             config.ConfigName = configName;
-            var result = configService.TrySaveConfiguration2(config);
+            var result = configService.TrySaveConfiguration(config);
             if (result == SaveConfigResult.Success)
             {
                 var menuItem = new ToolStripMenuItem(config.ConfigName, null, OnConfigurationSelected)
@@ -92,7 +119,7 @@ public class TrayApplicationContext : ApplicationContext
 
         if (result == DialogResult.Yes)
         {
-            configService.TrySaveConfiguration2(config);
+            configService.TrySaveConfiguration(config);
 
             var existingMenuItem = trayIcon.ContextMenuStrip.Items.Cast<ToolStripMenuItem>().FirstOrDefault(item => item.Text == config.ConfigName);
             if (existingMenuItem != null)
@@ -111,7 +138,6 @@ public class TrayApplicationContext : ApplicationContext
             AddNewConfig();
         }
     }
-
 
     private void OnConfigurationSelected(object sender, EventArgs e)
     {
@@ -168,6 +194,55 @@ public class TrayApplicationContext : ApplicationContext
             }
             return null;
         }
+    }
+
+    private void SetAsDefaultConfig(DisplaysConfiguration config)
+    {
+        // Logique pour définir cette configuration comme défaut
+        config.IsDefaultConfig = !config.IsDefaultConfig;
+        configService.TrySaveConfiguration(config);
+        MessageBox.Show($"{config.ConfigName} is now {(config.IsDefaultConfig ? "the default" : "no longer the default")}.", "Configuration Updated", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        RefreshContextMenu();
+    }
+
+    private void RenameConfig(DisplaysConfiguration config)
+    {
+        string newName = PromptForConfigurationName();
+        if (!string.IsNullOrEmpty(newName))
+        {
+            if (configService.RenameConfiguration(config.ConfigName, newName))
+            {
+                MessageBox.Show($"Configuration renamed to {newName}.", "Rename Successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                RefreshContextMenu();
+            }
+            else
+            {
+                MessageBox.Show("Failed to rename the configuration. The name might already be in use.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+    }
+
+    private void DeleteConfig(DisplaysConfiguration config)
+    {
+        if (MessageBox.Show($"Are you sure you want to delete {config.ConfigName}?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+        {
+            if (configService.DeleteConfiguration(config.ConfigName))
+            {
+                MessageBox.Show($"{config.ConfigName} has been deleted.", "Configuration Deleted", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                RefreshContextMenu();
+            }
+            else
+            {
+                MessageBox.Show("Failed to delete the configuration.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+    }
+
+    private void RefreshContextMenu()
+    {
+        trayIcon.ContextMenuStrip.Items.Clear();
+        UpdateContextMenuWithConfigurations();
+        InitialItems();
     }
 
     private void ConfigureScreens(object sender, EventArgs e)

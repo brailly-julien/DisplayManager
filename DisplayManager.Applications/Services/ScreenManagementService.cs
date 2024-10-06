@@ -14,6 +14,15 @@ public class ScreenManagementService : IScreenManagementService
         _windowsDisplayApiWrapper = new WindowsDisplayApiWrapper();
     }
 
+    public List<DisplaysConfiguration> DetectConnectedScreens()
+    {
+        List<DisplaysConfiguration> displaysConfig = GetDisplayDevices();
+        PrintDisplayInfo(displaysConfig);
+        /*_windowsDisplayApiWrapper.DetectDisplaysWMI();
+        _windowsDisplayApiWrapper.DetectDevices();*/
+        return displaysConfig;
+    }
+
     private List<DisplaysConfiguration> GetDisplayDevices()
     {
         DisplaysConfiguration display = new()
@@ -47,15 +56,6 @@ public class ScreenManagementService : IScreenManagementService
             System.Diagnostics.Debug.WriteLine($"Display Mode: {display.DisplayMode}");
             System.Diagnostics.Debug.WriteLine("---------------------------------------------------");
         }
-    }
-
-    public List<DisplaysConfiguration> DetectConnectedScreens()
-    {
-        List<DisplaysConfiguration> displaysConfig = GetDisplayDevices();
-        PrintDisplayInfo(displaysConfig);
-        /*_windowsDisplayApiWrapper.DetectDisplaysWMI();
-        _windowsDisplayApiWrapper.DetectDevices();*/
-        return displaysConfig;
     }
 
     public void ActivateScreen(int screenId)
