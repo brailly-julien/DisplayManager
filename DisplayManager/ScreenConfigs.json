@@ -1,0 +1,64 @@
+[
+  {
+    "ConfigName": "testRen",
+    "IsDefaultConfig": true,
+    "Screens": [
+      {
+        "DeviceName": "\\\\.\\DISPLAY1",
+        "DeviceString": "NVIDIA GeForce RTX 3070",
+        "DeviceID": "PCI\\VEN_10DE&DEV_2484&SUBSYS_39031462&REV_A1",
+        "DeviceKey": "\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Video\\{BD8D4293-44F7-11ED-A5BE-005056C00001}\\0000",
+        "StateFlags": 5,
+        "PositionX": 0,
+        "PositionY": 0,
+        "Width": 1920,
+        "Height": 1080,
+        "IsActive": true,
+        "IsPrimary": true,
+        "DisplayMode": "Extended"
+      },
+      {
+        "DeviceName": "\\\\.\\DISPLAY2",
+        "DeviceString": "NVIDIA GeForce RTX 3070",
+        "DeviceID": "PCI\\VEN_10DE&DEV_2484&SUBSYS_39031462&REV_A1",
+        "DeviceKey": "\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Video\\{BD8D4293-44F7-11ED-A5BE-005056C00001}\\0001",
+        "StateFlags": 1,
+        "PositionX": 1920,
+        "PositionY": 0,
+        "Width": 1920,
+        "Height": 1080,
+        "IsActive": true,
+        "IsPrimary": false,
+        "DisplayMode": "Extended"
+      },
+      {
+        "DeviceName": "\\\\.\\DISPLAY3",
+        "DeviceString": "NVIDIA GeForce RTX 3070",
+        "DeviceID": "PCI\\VEN_10DE&DEV_2484&SUBSYS_39031462&REV_A1",
+        "DeviceKey": "\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Video\\{BD8D4293-44F7-11ED-A5BE-005056C00001}\\0002",
+        "StateFlags": 0,
+        "PositionX": 0,
+        "PositionY": 0,
+        "Width": 0,
+        "Height": 0,
+        "IsActive": false,
+        "IsPrimary": false,
+        "DisplayMode": "Deactivated"
+      },
+      {
+        "DeviceName": "\\\\.\\DISPLAY4",
+        "DeviceString": "NVIDIA GeForce RTX 3070",
+        "DeviceID": "PCI\\VEN_10DE&DEV_2484&SUBSYS_39031462&REV_A1",
+        "DeviceKey": "\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Video\\{BD8D4293-44F7-11ED-A5BE-005056C00001}\\0003",
+        "StateFlags": 0,
+        "PositionX": 0,
+        "PositionY": 0,
+        "Width": 0,
+        "Height": 0,
+        "IsActive": false,
+        "IsPrimary": false,
+        "DisplayMode": "Deactivated"
+      }
+    ]
+  }
+]

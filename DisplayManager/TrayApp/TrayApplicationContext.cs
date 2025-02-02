@@ -1,11 +1,6 @@
 ﻿using DisplayManager.Applications.Services;
 using DisplayManager.Domain.Entities;
 using DisplayManager.Views;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static DisplayManager.Applications.Services.ConfigurationService;
 
 namespace DisplayManager.TrayApp;
@@ -54,8 +49,7 @@ public class TrayApplicationContext : ApplicationContext
             // Sous-menu pour définir comme configuration par défaut
             var setDefaultItem = new ToolStripMenuItem("Set as Default", null, (sender, e) => SetAsDefaultConfig(config))
             {
-                Checked = config.IsDefaultConfig,
-                CheckOnClick = true
+                Checked = config.IsDefaultConfig
             };
 
             // Sous-menu pour renommer la configuration
@@ -88,27 +82,25 @@ public class TrayApplicationContext : ApplicationContext
 
     private void AddNewConfig()
     {
-        var configService = new ConfigurationService();
-        var screenService = new ScreenManagementService();
-        var config = screenService.DetectConnectedScreens().First(); // Suppose this method returns List<DisplaysConfiguration>
+        ScreenManagementService screenService = new();
+        DisplaysConfiguration config = screenService.DetectConnectedScreens().First(); // Suppose this method returns List<DisplaysConfiguration>
         string configName = PromptForConfigurationName();
 
         if (!string.IsNullOrEmpty(configName))
         {
             config.ConfigName = configName;
+
+            var existingConfigurations = configService.LoadConfigurations();
+            if (existingConfigurations.Count == 0)
+                config.IsDefaultConfig = true;
+            else
+                config.IsDefaultConfig = false;
+
             var result = configService.TrySaveConfiguration(config);
             if (result == SaveConfigResult.Success)
-            {
-                var menuItem = new ToolStripMenuItem(config.ConfigName, null, OnConfigurationSelected)
-                {
-                    Tag = config
-                };
-                trayIcon.ContextMenuStrip.Items.Insert(0, menuItem);
-            }
+                RefreshContextMenu();
             else if (result == SaveConfigResult.Exists)
-            {
                 HandleExistingConfiguration(config, configService);
-            }
         }
     }
 
@@ -166,11 +158,11 @@ public class TrayApplicationContext : ApplicationContext
         }
     }
 
-    private string PromptForConfigurationName()//ToDo create the Form 
+    private string PromptForConfigurationName(string promptMessage = "Enter Config Name")
     {
         using (var form = new Form())
         {
-            form.Text = "Enter Config Name";
+            form.Text = promptMessage;
             var inputBox = new TextBox() { Left = 50, Top = 20, Width = 200 };
 
             var buttonOk = new Button() { Text = "Ok", Left = 150, Top = 50, Width = 100, DialogResult = DialogResult.OK };
@@ -185,7 +177,7 @@ public class TrayApplicationContext : ApplicationContext
             var result = form.ShowDialog();
             if (result == DialogResult.OK)
             {
-                if (string.IsNullOrWhiteSpace(inputBox.Text) || inputBox.Text == "Enter a name...")
+                if (string.IsNullOrWhiteSpace(inputBox.Text))
                 {
                     MessageBox.Show("Please enter a valid configuration name.", "Invalid Name", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return null;
@@ -198,16 +190,30 @@ public class TrayApplicationContext : ApplicationContext
 
     private void SetAsDefaultConfig(DisplaysConfiguration config)
     {
-        // Logique pour définir cette configuration comme défaut
-        config.IsDefaultConfig = !config.IsDefaultConfig;
-        configService.TrySaveConfiguration(config);
+        var configurations = configService.LoadConfigurations();
+
+        // Mettre IsDefaultConfig à false pour toutes les configurations
+        foreach (var c in configurations)
+        {
+            c.IsDefaultConfig = false;
+        }
+
+        // Mettre IsDefaultConfig à true pour la configuration sélectionnée
+        var selectedConfig = configurations.FirstOrDefault(c => c.ConfigName == config.ConfigName);
+        if (selectedConfig != null)
+        {
+            selectedConfig.IsDefaultConfig = true;
+        }
+
+        // Sauvegarder toutes les configurations mises à jour
+        configService.SaveAllConfigurations(configurations);
         MessageBox.Show($"{config.ConfigName} is now {(config.IsDefaultConfig ? "the default" : "no longer the default")}.", "Configuration Updated", MessageBoxButtons.OK, MessageBoxIcon.Information);
         RefreshContextMenu();
     }
 
     private void RenameConfig(DisplaysConfiguration config)
     {
-        string newName = PromptForConfigurationName();
+        string newName = PromptForConfigurationName("Enter new configuration name:");
         if (!string.IsNullOrEmpty(newName))
         {
             if (configService.RenameConfiguration(config.ConfigName, newName))
@@ -222,6 +228,7 @@ public class TrayApplicationContext : ApplicationContext
         }
     }
 
+
     private void DeleteConfig(DisplaysConfiguration config)
     {
         if (MessageBox.Show($"Are you sure you want to delete {config.ConfigName}?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
@@ -229,6 +236,19 @@ public class TrayApplicationContext : ApplicationContext
             if (configService.DeleteConfiguration(config.ConfigName))
             {
                 MessageBox.Show($"{config.ConfigName} has been deleted.", "Configuration Deleted", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // Si la configuration supprimée était la configuration par défaut
+                if (config.IsDefaultConfig)
+                {
+                    var configurations = configService.LoadConfigurations();
+                    if (configurations.Any())
+                    {
+                        // Définir la première configuration restante comme par défaut
+                        configurations[0].IsDefaultConfig = true;
+                        configService.SaveAllConfigurations(configurations);
+                    }
+                }
+
                 RefreshContextMenu();
             }
             else
