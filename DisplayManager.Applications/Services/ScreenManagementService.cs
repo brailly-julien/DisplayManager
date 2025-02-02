@@ -1,7 +1,6 @@
 ﻿using DisplayManager.Domain.Entities;
 using DisplayManager.Domain.Interfaces;
 using DisplayManager.Infrastructure.WindowsDisplayAPI;
-using System.Collections.Generic;
 
 namespace DisplayManager.Applications.Services;
 
@@ -48,7 +47,7 @@ public class ScreenManagementService : IScreenManagementService
             System.Diagnostics.Debug.WriteLine($"Device String: {display.DeviceString}");
             System.Diagnostics.Debug.WriteLine($"Device ID: {display.DeviceID}");
             System.Diagnostics.Debug.WriteLine($"Device Key: {display.DeviceKey}");
-            System.Diagnostics.Debug.WriteLine($"State Flags: {System.Convert.ToString(display.StateFlags, 2).PadLeft(32, '0')}");
+            System.Diagnostics.Debug.WriteLine($"State Flags: {Convert.ToString(display.StateFlags, 2).PadLeft(32, '0')}");
             System.Diagnostics.Debug.WriteLine($"Active: {display.IsActive}");
             System.Diagnostics.Debug.WriteLine($"Primary: {display.IsPrimary}");
             System.Diagnostics.Debug.WriteLine($"Position: ({display.PositionX}, {display.PositionY})");

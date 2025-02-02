@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DisplayManager.Domain.Entities;
+﻿namespace DisplayManager.Domain.Entities;
 
 public class Screen
 {
