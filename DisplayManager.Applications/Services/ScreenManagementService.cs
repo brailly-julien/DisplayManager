@@ -68,4 +68,38 @@ public class ScreenManagementService : IScreenManagementService
         // Implémentez la logique pour désactiver un écran
         // Ceci pourrait également impliquer de modifier la configuration d'affichage Windows
     }
+
+    public void ApplyDisplayConfiguration(DisplaysConfiguration config)
+    {
+        // Récupérer la liste complète des écrans
+        var allSystemScreens = _windowsDisplayApiWrapper.DetectDisplays();
+
+        // Définir l’écran principal s’il y en a un dans la config (IsPrimary)
+        var primaryScreen = config.Screens.FirstOrDefault(s => s.IsPrimary);
+        if (primaryScreen != null)
+        {
+            WindowsDisplayApiWrapper.SetPrimaryMonitor(primaryScreen);
+        }
+
+        // Activer / Désactiver les écrans selon la config
+        foreach (var screen in config.Screens)
+        {
+            if (screen.IsActive)
+                WindowsDisplayApiWrapper.ActivateMonitor(screen);
+            else
+                WindowsDisplayApiWrapper.DeactivateMonitor(screen);
+
+            Console.WriteLine($"Applying settings for {screen.DeviceName} - Mode: {screen.DisplayMode}");
+        }
+
+        // Désactiver les écrans qui ne sont pas dans la config
+        foreach (var sysScreen in allSystemScreens)
+        {
+            bool isInConfig = config.Screens.Any(c => c.DeviceName == sysScreen.DeviceName);
+            if (!isInConfig && sysScreen.IsActive)
+            {
+                WindowsDisplayApiWrapper.DeactivateMonitor(sysScreen);
+            }
+        }
+    }
 }

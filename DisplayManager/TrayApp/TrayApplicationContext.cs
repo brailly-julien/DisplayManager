@@ -133,28 +133,12 @@ public class TrayApplicationContext : ApplicationContext
 
     private void OnConfigurationSelected(object sender, EventArgs e)
     {
-        var menuItem = sender as ToolStripMenuItem;
-        var config = menuItem.Tag as DisplaysConfiguration; // Obtenir la configuration depuis le Tag du menuItem
-
-        if (config != null)
+        ToolStripMenuItem? menuItem = sender as ToolStripMenuItem;
+        if (menuItem.Tag is DisplaysConfiguration config)
         {
-            // Logique pour appliquer la configuration sélectionnée
-            // Exemple: Changer la configuration d'affichage des écrans selon les détails dans config
-            ApplyDisplayConfiguration(config);
-        }
-    }
-    private void ApplyDisplayConfiguration(DisplaysConfiguration config)
-    {
-        // Cette méthode devrait appliquer la configuration à l'ensemble des écrans
-        // selon les détails contenus dans la configuration fournie
-        // Vous aurez probablement besoin de méthodes supplémentaires pour changer les configurations d'affichage actuelles
-
-        foreach (var screen in config.Screens)
-        {
-            // Appliquez la configuration pour chaque écran
-            // Par exemple, ajuster la résolution, l'orientation, etc.
-            Console.WriteLine($"Applying settings for {screen.DeviceName} - Mode: {screen.DisplayMode}");
-            // Ici, vous pourriez appeler d'autres fonctions API pour ajuster les paramètres réels du moniteur
+            // Appliquer la configuration
+            var screenService = new ScreenManagementService();
+            screenService.ApplyDisplayConfiguration(config);
         }
     }
 
@@ -174,7 +158,7 @@ public class TrayApplicationContext : ApplicationContext
             form.AcceptButton = buttonOk;
             form.CancelButton = buttonCancel;
 
-            var result = form.ShowDialog();
+            DialogResult result = form.ShowDialog();
             if (result == DialogResult.OK)
             {
                 if (string.IsNullOrWhiteSpace(inputBox.Text))
@@ -190,22 +174,17 @@ public class TrayApplicationContext : ApplicationContext
 
     private void SetAsDefaultConfig(DisplaysConfiguration config)
     {
-        var configurations = configService.LoadConfigurations();
+        List<DisplaysConfiguration> configurations = configService.LoadConfigurations();
 
-        // Mettre IsDefaultConfig à false pour toutes les configurations
         foreach (var c in configurations)
         {
             c.IsDefaultConfig = false;
         }
 
-        // Mettre IsDefaultConfig à true pour la configuration sélectionnée
-        var selectedConfig = configurations.FirstOrDefault(c => c.ConfigName == config.ConfigName);
+        DisplaysConfiguration? selectedConfig = configurations.FirstOrDefault(c => c.ConfigName == config.ConfigName);
         if (selectedConfig != null)
-        {
             selectedConfig.IsDefaultConfig = true;
-        }
 
-        // Sauvegarder toutes les configurations mises à jour
         configService.SaveAllConfigurations(configurations);
         MessageBox.Show($"{config.ConfigName} is now {(config.IsDefaultConfig ? "the default" : "no longer the default")}.", "Configuration Updated", MessageBoxButtons.OK, MessageBoxIcon.Information);
         RefreshContextMenu();
@@ -222,9 +201,7 @@ public class TrayApplicationContext : ApplicationContext
                 RefreshContextMenu();
             }
             else
-            {
                 MessageBox.Show("Failed to rename the configuration. The name might already be in use.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
         }
     }
 
@@ -263,16 +240,6 @@ public class TrayApplicationContext : ApplicationContext
         trayIcon.ContextMenuStrip.Items.Clear();
         UpdateContextMenuWithConfigurations();
         InitialItems();
-    }
-
-    private void ConfigureScreens(object sender, EventArgs e)
-    {
-        // Implémentez la logique pour ouvrir une fenêtre de configuration ou un dialogue
-    }
-
-    private void ToggleScreens(object sender, EventArgs e)
-    {
-        // Implémentez la logique pour activer/désactiver les écrans
     }
 
     private void Exit(object sender, EventArgs e)

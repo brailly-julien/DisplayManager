@@ -7,4 +7,5 @@ public interface IScreenManagementService
     List<DisplaysConfiguration> DetectConnectedScreens();
     void ActivateScreen(int screenId);
     void DesactivateScreen(int screenId);
+    void ApplyDisplayConfiguration(DisplaysConfiguration config);
 }
