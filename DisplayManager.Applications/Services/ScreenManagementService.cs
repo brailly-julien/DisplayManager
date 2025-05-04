@@ -40,8 +40,8 @@ public class ScreenManagementService : IScreenManagementService
 
     public void PrintDisplayInfo(List<DisplaysConfiguration> displaysConfig)
     {
-        var displays = displaysConfig.First().Screens;
-        foreach (var display in displays)
+        List<Screen> displays = displaysConfig.First().Screens;
+        foreach (Screen display in displays)
         {
             System.Diagnostics.Debug.WriteLine($"Device Name: {display.DeviceName}");
             System.Diagnostics.Debug.WriteLine($"Device String: {display.DeviceString}");
@@ -72,17 +72,17 @@ public class ScreenManagementService : IScreenManagementService
     public void ApplyDisplayConfiguration(DisplaysConfiguration config)
     {
         // Récupérer la liste complète des écrans
-        var allSystemScreens = _windowsDisplayApiWrapper.DetectDisplays();
+        List<Screen> allSystemScreens = _windowsDisplayApiWrapper.DetectDisplays();
 
         // Définir l’écran principal s’il y en a un dans la config (IsPrimary)
-        var primaryScreen = config.Screens.FirstOrDefault(s => s.IsPrimary);
+        Screen? primaryScreen = config.Screens.FirstOrDefault(s => s.IsPrimary);
         if (primaryScreen != null)
         {
             WindowsDisplayApiWrapper.SetPrimaryMonitor(primaryScreen);
         }
 
         // Activer / Désactiver les écrans selon la config
-        foreach (var screen in config.Screens)
+        foreach (Screen screen in config.Screens)
         {
             if (screen.IsActive)
                 WindowsDisplayApiWrapper.ActivateMonitor(screen);
@@ -93,7 +93,7 @@ public class ScreenManagementService : IScreenManagementService
         }
 
         // Désactiver les écrans qui ne sont pas dans la config
-        foreach (var sysScreen in allSystemScreens)
+        foreach (Screen sysScreen in allSystemScreens)
         {
             bool isInConfig = config.Screens.Any(c => c.DeviceName == sysScreen.DeviceName);
             if (!isInConfig && sysScreen.IsActive)

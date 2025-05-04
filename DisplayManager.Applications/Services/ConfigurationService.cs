@@ -10,7 +10,7 @@ public class ConfigurationService
 
     public SaveConfigResult TrySaveConfiguration(DisplaysConfiguration config)
     {
-        var configurations = LoadConfigurations();
+        List<DisplaysConfiguration> configurations = LoadConfigurations();
 
         if (configurations.Any(c => c.ConfigName == config.ConfigName))
             return SaveConfigResult.Exists;
@@ -41,8 +41,8 @@ public class ConfigurationService
 
     public bool DeleteConfiguration(string configName)
     {
-        var configurations = LoadConfigurations();
-        var configToDelete = configurations.FirstOrDefault(c => c.ConfigName == configName);
+        List<DisplaysConfiguration> configurations = LoadConfigurations();
+        DisplaysConfiguration? configToDelete = configurations.FirstOrDefault(c => c.ConfigName == configName);
 
         if (configToDelete != null)
         {
@@ -56,8 +56,8 @@ public class ConfigurationService
 
     public bool RenameConfiguration(string oldName, string newName)
     {
-        var configurations = LoadConfigurations();
-        var configToRename = configurations.FirstOrDefault(c => c.ConfigName == oldName);
+        List<DisplaysConfiguration> configurations = LoadConfigurations();
+        DisplaysConfiguration? configToRename = configurations.FirstOrDefault(c => c.ConfigName == oldName);
 
         if (configToRename != null && !configurations.Any(c => c.ConfigName == newName))
         {

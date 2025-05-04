@@ -105,7 +105,7 @@ public class WindowsDisplayApiWrapper
         List<Screen> displays = [];
 
         int deviceNum = 0;
-        DISPLAY_DEVICE displayDevice = new DISPLAY_DEVICE();
+        DISPLAY_DEVICE displayDevice = new();
         displayDevice.cb = Marshal.SizeOf(displayDevice);
 
         while (EnumDisplayDevices("", (uint)deviceNum, ref displayDevice, 0))
@@ -113,7 +113,7 @@ public class WindowsDisplayApiWrapper
             DEVMODE devMode = new();
             devMode.dmSize = (short)Marshal.SizeOf(devMode);
 
-            Screen info = new Screen
+            Screen info = new()
             {
                 DeviceName = displayDevice.DeviceName,
                 DeviceString = displayDevice.DeviceString,
@@ -181,7 +181,7 @@ public class WindowsDisplayApiWrapper
     public static void SetPrimaryMonitor(Screen screen)
     {
         // Charger les settings actuels
-        DEVMODE dm = new DEVMODE();
+        DEVMODE dm = new();
         dm.dmSize = (short)Marshal.SizeOf(dm);
 
         bool success = EnumDisplaySettings(screen.DeviceName, ENUM_CURRENT_SETTINGS, ref dm);
@@ -213,7 +213,7 @@ public class WindowsDisplayApiWrapper
     public static void ActivateMonitor(Screen screen)
     {
         // Pour activer un moniteur, on doit l'attacher au desktop en modifiant son DEVMODE
-        DEVMODE dm = new DEVMODE();
+        DEVMODE dm = new();
         dm.dmSize = (short)Marshal.SizeOf(dm);
 
         bool success = EnumDisplaySettings(screen.DeviceName, ENUM_CURRENT_SETTINGS, ref dm);
@@ -240,7 +240,7 @@ public class WindowsDisplayApiWrapper
     public static void DeactivateMonitor(Screen screen)
     {
         // Détacher un moniteur en le positionnant en "off"
-        DEVMODE dm = new DEVMODE();
+        DEVMODE dm = new();
         dm.dmSize = (short)Marshal.SizeOf(dm);
 
         bool success = EnumDisplaySettings(screen.DeviceName, ENUM_CURRENT_SETTINGS, ref dm);

@@ -37,26 +37,25 @@ public class TrayApplicationContext : ApplicationContext
 
     private void UpdateContextMenuWithConfigurations()
     {
-        var configurations = configService.LoadConfigurations();
-        foreach (var config in configurations)
-        {
-            // Création d'un menuItem pour chaque configuration avec un sous-menu
-            var menuItem = new ToolStripMenuItem(config.ConfigName)
+        List<DisplaysConfiguration> configurations = configService.LoadConfigurations();
+        foreach (DisplaysConfiguration config in configurations)
+        { // Création d'un menuItem pour chaque configuration avec un sous-menu
+            ToolStripMenuItem menuItem = new(config.ConfigName)
             {
                 Tag = config
             };
 
             // Sous-menu pour définir comme configuration par défaut
-            var setDefaultItem = new ToolStripMenuItem("Set as Default", null, (sender, e) => SetAsDefaultConfig(config))
+            ToolStripMenuItem setDefaultItem = new("Set as Default", null, (sender, e) => SetAsDefaultConfig(config))
             {
                 Checked = config.IsDefaultConfig
             };
 
             // Sous-menu pour renommer la configuration
-            var renameItem = new ToolStripMenuItem("Rename", null, (sender, e) => RenameConfig(config));
+            ToolStripMenuItem renameItem = new("Rename", null, (sender, e) => RenameConfig(config));
 
             // Sous-menu pour supprimer la configuration
-            var deleteItem = new ToolStripMenuItem("Delete", null, (sender, e) => DeleteConfig(config));
+            ToolStripMenuItem deleteItem = new("Delete", null, (sender, e) => DeleteConfig(config));
 
             // Ajout des sous-menus au menu principal de la configuration
             menuItem.DropDownItems.Add(setDefaultItem);
@@ -90,13 +89,13 @@ public class TrayApplicationContext : ApplicationContext
         {
             config.ConfigName = configName;
 
-            var existingConfigurations = configService.LoadConfigurations();
+            List<DisplaysConfiguration> existingConfigurations = configService.LoadConfigurations();
             if (existingConfigurations.Count == 0)
                 config.IsDefaultConfig = true;
             else
                 config.IsDefaultConfig = false;
 
-            var result = configService.TrySaveConfiguration(config);
+            SaveConfigResult result = configService.TrySaveConfiguration(config);
             if (result == SaveConfigResult.Success)
                 RefreshContextMenu();
             else if (result == SaveConfigResult.Exists)
@@ -106,19 +105,19 @@ public class TrayApplicationContext : ApplicationContext
 
     private void HandleExistingConfiguration(DisplaysConfiguration config, ConfigurationService configService)
     {
-        var customDialog = new CustomConfigDialog();
-        var result = customDialog.ShowDialog(config.ConfigName);
+        CustomConfigDialog customDialog = new();
+        DialogResult result = customDialog.ShowDialog(config.ConfigName);
 
         if (result == DialogResult.Yes)
         {
             configService.TrySaveConfiguration(config);
 
-            var existingMenuItem = trayIcon.ContextMenuStrip.Items.Cast<ToolStripMenuItem>().FirstOrDefault(item => item.Text == config.ConfigName);
+            ToolStripMenuItem? existingMenuItem = trayIcon.ContextMenuStrip.Items.Cast<ToolStripMenuItem>().FirstOrDefault(item => item.Text == config.ConfigName);
             if (existingMenuItem != null)
                 existingMenuItem.Tag = config;
             else
             {
-                var menuItem = new ToolStripMenuItem(config.ConfigName, null, OnConfigurationSelected)
+                ToolStripMenuItem menuItem = new(config.ConfigName, null, OnConfigurationSelected)
                 {
                     Tag = config
                 };
@@ -126,9 +125,7 @@ public class TrayApplicationContext : ApplicationContext
             }
         }
         else if (result == DialogResult.No)
-        {
             AddNewConfig();
-        }
     }
 
     private void OnConfigurationSelected(object sender, EventArgs e)
@@ -137,20 +134,20 @@ public class TrayApplicationContext : ApplicationContext
         if (menuItem.Tag is DisplaysConfiguration config)
         {
             // Appliquer la configuration
-            var screenService = new ScreenManagementService();
+            ScreenManagementService screenService = new();
             screenService.ApplyDisplayConfiguration(config);
         }
     }
 
-    private string PromptForConfigurationName(string promptMessage = "Enter Config Name")
+    private static string PromptForConfigurationName(string promptMessage = "Enter Config Name")
     {
-        using (var form = new Form())
+        using (Form form = new())
         {
             form.Text = promptMessage;
-            var inputBox = new TextBox() { Left = 50, Top = 20, Width = 200 };
+            TextBox inputBox = new() { Left = 50, Top = 20, Width = 200 };
 
-            var buttonOk = new Button() { Text = "Ok", Left = 150, Top = 50, Width = 100, DialogResult = DialogResult.OK };
-            var buttonCancel = new Button() { Text = "Cancel", Left = 50, Top = 50, Width = 100, DialogResult = DialogResult.Cancel };
+            Button buttonOk = new() { Text = "Ok", Left = 150, Top = 50, Width = 100, DialogResult = DialogResult.OK };
+            Button buttonCancel = new() { Text = "Cancel", Left = 50, Top = 50, Width = 100, DialogResult = DialogResult.Cancel };
 
             form.Controls.Add(inputBox);
             form.Controls.Add(buttonOk);
@@ -176,7 +173,7 @@ public class TrayApplicationContext : ApplicationContext
     {
         List<DisplaysConfiguration> configurations = configService.LoadConfigurations();
 
-        foreach (var c in configurations)
+        foreach (DisplaysConfiguration c in configurations)
         {
             c.IsDefaultConfig = false;
         }
@@ -217,7 +214,7 @@ public class TrayApplicationContext : ApplicationContext
                 // Si la configuration supprimée était la configuration par défaut
                 if (config.IsDefaultConfig)
                 {
-                    var configurations = configService.LoadConfigurations();
+                    List<DisplaysConfiguration> configurations = configService.LoadConfigurations();
                     if (configurations.Any())
                     {
                         // Définir la première configuration restante comme par défaut

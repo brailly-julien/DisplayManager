@@ -1,14 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
-namespace DisplayManager.Views;
+﻿namespace DisplayManager.Views;
 
 public partial class CustomConfigDialog : Form
 {
@@ -29,7 +19,7 @@ public partial class CustomConfigDialog : Form
         int buttonHeight = 30;
         int spacing = 10;
 
-        Label label = new Label
+        Label label = new()
         {
             Text = "A configuration with the name already exists. What would you like to do?",
             Dock = DockStyle.Top,
