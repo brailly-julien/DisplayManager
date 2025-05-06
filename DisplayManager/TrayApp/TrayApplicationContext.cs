@@ -45,6 +45,8 @@ public class TrayApplicationContext : ApplicationContext
                 Tag = config
             };
 
+            menuItem.Click += OnConfigurationSelected;
+
             // Sous-menu pour définir comme configuration par défaut
             ToolStripMenuItem setDefaultItem = new("Set as Default", null, (sender, e) => SetAsDefaultConfig(config))
             {
@@ -128,14 +130,22 @@ public class TrayApplicationContext : ApplicationContext
             AddNewConfig();
     }
 
-    private void OnConfigurationSelected(object sender, EventArgs e)
+    private void OnConfigurationSelected(object? sender, EventArgs e)
     {
         ToolStripMenuItem? menuItem = sender as ToolStripMenuItem;
-        if (menuItem.Tag is DisplaysConfiguration config)
+        if (menuItem?.Tag is DisplaysConfiguration config)
         {
-            // Appliquer la configuration
-            ScreenManagementService screenService = new();
-            screenService.ApplyDisplayConfiguration(config);
+            Console.WriteLine($"[TrayApp] OnConfigurationSelected: applying '{config.ConfigName}'");  // <-- log
+            try
+            {
+                ScreenManagementService screenService = new();
+                screenService.ApplyDisplayConfiguration(config);
+                Console.WriteLine($"[TrayApp] Configuration '{config.ConfigName}' applied.");        // <-- log succès
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[TrayApp][Error] failed to apply '{config.ConfigName}': {ex}");
+            }
         }
     }
 
