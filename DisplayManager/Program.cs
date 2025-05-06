@@ -14,10 +14,19 @@ static class Program
     [STAThread]
     static void Main()
     {
+
+        #if DEBUG
+            // Remonte de 3 niveaux : 
+            //  bin\Debug\netX\ =>   bin\Debug\     =>  bin\    =>  <ProjectRoot>
+            var exeFolder = AppContext.BaseDirectory;
+            var projectRoot = Path.GetFullPath(Path.Combine(exeFolder, @"..\..\..\"));
+            Directory.SetCurrentDirectory(projectRoot);
+        #endif
+
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
 
-        // Créez le service de gestion des écrans et détectez les écrans immédiatement
+        // Crï¿½ez le service de gestion des ï¿½crans et dï¿½tectez les ï¿½crans immï¿½diatement
         //var screenService = new ScreenManagementService();
         //screenService.DetectConnectedScreens();
 
